@@ -44,7 +44,21 @@ const productsCollection = client.db('proShopDB').collection('products')
 app.get('/all-products', async (req, res) => {
 const page = parseInt(req.query.page) || 1;
 const size = parseInt(req.query.size)-1 || 0;
-  const result = await productsCollection.find().skip(page*size).limit(size).toArray()
+const sort = req.query.sort;
+
+
+let sortCriteria = {};
+if(sort === 'asc'){
+  sortCriteria.price = 1
+}
+else if(sort === 'dsc'){
+  sortCriteria.price = -1;
+}
+else if(sort === 'date-added'){
+  sortCriteria.creationDate = -1;
+}
+
+  const result = await productsCollection.find().sort(sortCriteria).skip(page*size).limit(size).toArray()
   res.send(result)
 })
 
