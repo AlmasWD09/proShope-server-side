@@ -37,7 +37,22 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
+//  all collection here......
+const productsCollection = client.db('proShopDB').collection('products')
  
+//all products get mongoDB
+app.get('/all-products', async (req, res) => {
+const page = parseInt(req.query.page) || 1;
+const size = parseInt(req.query.size)-1 || 0;
+  const result = await productsCollection.find().skip(page*size).limit(size).toArray()
+  res.send(result)
+})
+
+app.get('/counts',async(req,res)=>{
+  const count = await productsCollection.countDocuments()
+  res.send({count})
+})
+
     await client.db("admin").command({ ping: 1 });
     console.log("successfully connected to MongoDB!");
   } finally {
