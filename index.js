@@ -13,7 +13,7 @@ app.use(
     cors({
       origin: [
         "http://localhost:5173",
-        ""
+        "https://scic-task-ten.web.app"
       ],
       credentials: true,
     })
