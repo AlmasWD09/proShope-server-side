@@ -39,12 +39,47 @@ async function run() {
   try {
 //  all collection here......
 const productsCollection = client.db('proShopDB').collection('products')
+const usersCollection = client.db('proShopDB').collection('users')
  
+// user api
+
+app.put('/user/api/create', async (req, res) => {
+  try{
+    const user = req.body
+    const query = { email: user?.email }
+    const isExist = await usersCollection.findOne(query)
+    if (isExist) {
+      return res.json({
+        message: "user alredy exist"
+      })
+    }else{
+      const options = { upsert: true }
+      const updateDoc = {
+        $set: {
+          ...user,
+          timestamp: Date.now(),
+        },
+      }
+      const result = await usersCollection.updateOne(query, updateDoc, options)
+      res.send(result)
+    }
+  }
+  catch(error){
+    return res.json({
+      message:"user alredy exist.."
+    })
+  }
+})
+  
+
+
+
 //all products get mongoDB
 app.get('/all-products', async (req, res) => {
-const page = parseInt(req.query.page) || 1;
-const size = parseInt(req.query.size)-1 || 0;
+  const page = parseInt(req.query.page) || 1;
+  const size = parseInt(req.query.size) || 8;
 const sort = req.query.sort;
+const search = req.query.search || '';
 
 
 let sortCriteria = {};
@@ -58,12 +93,35 @@ else if(sort === 'date-added'){
   sortCriteria.creationDate = -1;
 }
 
-  const result = await productsCollection.find().sort(sortCriteria).skip(page*size).limit(size).toArray()
+ // Create a search filter if a search query is provided
+ let searchFilter = {};
+ if (search) {
+   searchFilter = {
+     $or: [
+       { name: { $regex: search, $options: 'i' } }, 
+       { category: { $regex: search, $options: 'i' } }, 
+       { description: { $regex: search, $options: 'i' } }, 
+     ]
+   };
+ }
+  const result = await productsCollection.find(searchFilter).sort(sortCriteria).skip((page - 1) * size).limit(size).toArray()
   res.send(result)
 })
 
 app.get('/counts',async(req,res)=>{
-  const count = await productsCollection.countDocuments()
+  const search = req.query.search || '';
+
+  let searchFilter = {};
+ if (search) {
+   searchFilter = {
+     $or: [
+      { name: { $regex: search, $options: 'i' } }, 
+      { category: { $regex: search, $options: 'i' } }, 
+      { description: { $regex: search, $options: 'i' } },  
+     ]
+   };
+ }
+  const count = await productsCollection.countDocuments(searchFilter)
   res.send({count})
 })
 
