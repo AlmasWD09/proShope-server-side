@@ -76,10 +76,13 @@ app.put('/user/api/create', async (req, res) => {
 
 //all products get mongoDB
 app.get('/all-products', async (req, res) => {
-  const page = parseInt(req.query.page) || 1;
-  const size = parseInt(req.query.size) || 8;
+  const page = parseInt(req.query.page);
+  const size = parseInt(req.query.size) ;
 const sort = req.query.sort;
 const search = req.query.search || '';
+const categoryData = req.query.category;
+const band = req.query.band;
+
 
 
 let sortCriteria = {};
@@ -99,28 +102,60 @@ else if(sort === 'date-added'){
    searchFilter = {
      $or: [
        { name: { $regex: search, $options: 'i' } }, 
+       { bandName: { $regex: search, $options: 'i' } },
        { category: { $regex: search, $options: 'i' } }, 
        { description: { $regex: search, $options: 'i' } }, 
      ]
    };
  }
-  const result = await productsCollection.find(searchFilter).sort(sortCriteria).skip((page - 1) * size).limit(size).toArray()
+
+
+// create a filter by catery name
+if(categoryData){
+  searchFilter.category = {$regex: categoryData, $options: 'i'}
+}
+
+//  Creat a filter by bandName
+ if (band) {
+  searchFilter.bandName = { $regex: band, $options: 'i' };
+}
+
+const result = await productsCollection.find(searchFilter).sort(sortCriteria).skip((page - 1) * size).limit(size).toArray()
   res.send(result)
+
 })
+
+
 
 app.get('/counts',async(req,res)=>{
   const search = req.query.search || '';
+  const categoryData = req.query.category;
+  const band = req.query.band;
+
 
   let searchFilter = {};
+  // search
  if (search) {
    searchFilter = {
      $or: [
       { name: { $regex: search, $options: 'i' } }, 
+      { bandName: { $regex: search, $options: 'i' } }, 
       { category: { $regex: search, $options: 'i' } }, 
       { description: { $regex: search, $options: 'i' } },  
      ]
    };
  }
+
+//  category
+ if(categoryData){
+  searchFilter.category = {$regex: categoryData, $options: 'i'}
+}
+
+// bandName
+ if (band) {
+  searchFilter.bandName = { $regex: band, $options: 'i' };
+}
+
   const count = await productsCollection.countDocuments(searchFilter)
   res.send({count})
 })
