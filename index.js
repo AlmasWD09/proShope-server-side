@@ -22,7 +22,7 @@ app.use(express.json())
 
 // mongodb here.....
 
-// llll
+
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.1kmrgvs.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
 
